@@ -1,6 +1,7 @@
 🌍 BlueTech Revolution
 Welcome to the BlueTech Revolution repository! This project promotes technological innovations for environmental sustainability through a web-based platform showcasing impactful solutions for water conservation, clean energy, and eco-friendly practices.
 
+Link to the Website: https://blue-tech-revolution-three.vercel.app/
 🚀 Features
 ✅ Interactive platform showcasing sustainability projects
 ✅ Insights into environmental impact and conservation strategies
