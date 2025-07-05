@@ -1,384 +1,701 @@
-import React, { useState, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Heart, Users, Globe, ArrowRight, Send } from 'lucide-react';
-import ContactForm from './ContactForm';
+import { useState, useRef } from 'react';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Send, 
+  Calendar,
+  ArrowRight,
+  CheckCircle,
+  AlertCircle,
+  Sparkles,
+  Users,
+  Building,
+  Zap,
+  Headphones,
+  Video,
+  FileText,
+  ExternalLink,
+  Copy,
+  Check,
+  ChevronDown
+} from 'lucide-react';
+import { FloatingElement, GlowCard, WaveBackground, ParticleField, BubbleEffect } from './AnimationUtils';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-};
+interface ContactInfo {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  details: string[];
+  gradient: string;
+  action?: string;
+}
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0 },
-};
+interface ServiceOption {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}
+
+const contactInfo: ContactInfo[] = [
+  {
+    icon: Mail,
+    title: 'Email Us',
+    details: ['hello@bluetechrevolution.com', 'support@bluetechrevolution.com'],
+    gradient: 'from-blue-500 to-cyan-400',
+    action: 'Send Email'
+  },
+  {
+    icon: Phone,
+    title: 'Call Us',
+    details: ['+1 (555) 123-4567', '+1 (555) 987-6543'],
+    gradient: 'from-green-500 to-emerald-400',
+    action: 'Call Now'
+  },
+  {
+    icon: MapPin,
+    title: 'Visit Us',
+    details: ['123 Ocean Drive', 'San Francisco, CA 94102'],
+    gradient: 'from-purple-500 to-pink-400',
+    action: 'Get Directions'
+  },
+  {
+    icon: Video,
+    title: 'Video Call',
+    details: ['Schedule a virtual meeting', 'Available 24/7'],
+    gradient: 'from-orange-500 to-red-400',
+    action: 'Book Meeting'
+  }
+];
+
+const serviceOptions: ServiceOption[] = [
+  {
+    id: 'partnership',
+    title: 'Partnership Inquiry',
+    description: 'Explore collaboration opportunities',
+    icon: Users,
+    color: 'from-blue-500 to-cyan-400'
+  },
+  {
+    id: 'consulting',
+    title: 'Environmental Consulting',
+    description: 'Get expert sustainability advice',
+    icon: Building,
+    color: 'from-green-500 to-emerald-400'
+  },
+  {
+    id: 'technology',
+    title: 'Technology Solutions',
+    description: 'Implement our cutting-edge tech',
+    icon: Zap,
+    color: 'from-purple-500 to-pink-400'
+  },
+  {
+    id: 'support',
+    title: 'Customer Support',
+    description: 'Get help with existing solutions',
+    icon: Headphones,
+    color: 'from-orange-500 to-yellow-400'
+  }
+];
 
 export default function Contact() {
-  const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false);
-  const [email, setEmail] = useState('');
-  const [isNewsletterSubmitted, setIsNewsletterSubmitted] = useState(false);
-  const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    company: '',
+    subject: '',
+    message: '',
+    service: '',
+    budget: '',
+    timeline: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [selectedService, setSelectedService] = useState<string>('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
 
-  const statistics = [
-    { icon: Users, value: '10K+', label: 'Volunteers Worldwide' },
-    { icon: Globe, value: '50+', label: 'Countries Reached' },
-    { icon: Heart, value: '100+', label: 'Projects Completed' },
-  ];
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsNewsletterSubmitting(true);
-    // Add newsletter submission logic here
-    setTimeout(() => {
-      setIsNewsletterSubmitting(false);
-      setIsNewsletterSubmitted(true);
-    }, 1000);
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Reset form and show success
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        subject: '',
+        message: '',
+        service: '',
+        budget: '',
+        timeline: ''
+      });
+      setIsSubmitted(true);
+      setSelectedService('');
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => setIsSubmitted(false), 5000);
+    } catch (err) {
+      setError('Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText('hello@bluetechrevolution.com');
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy email');
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      }
+    }
   };
 
   return (
-    <motion.section 
-      id="contact" 
-      ref={sectionRef}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-      variants={containerVariants}
-      className="py-20 relative overflow-hidden"
-    >
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-blue-100/50"></div>
-        <svg className="absolute top-0 left-0 w-full h-64 text-blue-100 fill-current transform rotate-180" viewBox="0 0 1200 120" preserveAspectRatio="none">
-          <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" opacity="0.3"></path>
-        </svg>
-        <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-blue-300/20 rounded-full filter blur-3xl"></div>
-        <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-cyan-300/20 rounded-full filter blur-3xl"></div>
+    <section id="contact" className="relative py-20 bg-gradient-to-b from-slate-900 via-blue-900 to-cyan-900 overflow-hidden">
+      {/* Enhanced Background */}
+      <div className="absolute inset-0">
+        <ParticleField particleCount={80} />
+        <BubbleEffect count={20} />
+        <WaveBackground />
+        
+        {/* Animated gradient overlay */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-br opacity-40"
+          animate={{
+            background: [
+              "linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #0369a1 50%, #0284c7 75%, #06b6d4 100%)",
+              "linear-gradient(135deg, #1e293b 0%, #0369a1 25%, #0284c7 50%, #06b6d4 75%, #0f172a 100%)",
+              "linear-gradient(135deg, #0369a1 0%, #0284c7 25%, #06b6d4 50%, #0f172a 75%, #1e293b 100%)",
+            ]
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+
+        {/* Floating elements */}
+        <div className="absolute inset-0">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-24 h-24 border border-cyan-400/20 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.2, 0.5, 0.2],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{
+                duration: 6 + i,
+                repeat: Infinity,
+                delay: i * 0.8
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Header Section */}
-        <motion.div 
-          variants={itemVariants}
-          className="text-center max-w-3xl mx-auto mb-16"
+        {/* Enhanced Header */}
+        <motion.div
+          ref={ref}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={containerVariants}
+          className="text-center mb-20"
         >
-          <span className="inline-block px-4 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-4 shadow-sm">
-            Connect With Us
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-            Get Involved in Our <span className="text-blue-600">Mission</span>
-          </h2>
-          <p className="text-xl text-gray-600">
-            Join us in our journey to revolutionize ocean conservation through innovation and collaboration
-          </p>
-        </motion.div>
-
-        {/* Stats Section */}
-        <motion.div 
-          variants={itemVariants}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20"
-        >
-          {statistics.map((stat, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ y: -5, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1)" }}
-              className="bg-white p-6 rounded-xl shadow-lg text-center transform transition-all duration-300"
-            >
-              <div className="relative">
-                <div className="p-4 bg-blue-100 rounded-full inline-flex mb-4 relative">
-                  <stat.icon className="h-8 w-8 text-blue-600" />
-                  <div className="absolute inset-0 bg-blue-600/10 rounded-full blur-md"></div>
-                </div>
-              </div>
-              <h3 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                {stat.value}
-              </h3>
-              <p className="text-gray-600 font-medium">{stat.label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-          {/* Contact Form */}
-          <motion.div
+          <motion.h2 
             variants={itemVariants}
-            className="bg-white shadow-xl p-8 rounded-2xl border border-gray-100"
+            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight"
           >
-            <ContactForm />
+            <span className="text-white">Ready to Make</span>
+            <br />
+            <span className="gradient-text">Real Change?</span>
+          </motion.h2>
+          
+          <motion.p 
+            variants={itemVariants}
+            className="text-lg md:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-6"
+          >
+            Connect with our team of environmental innovators. Whether you're looking to partner, 
+            implement our solutions, or explore new possibilities, we're here to help transform your sustainability vision into reality.
+          </motion.p>
+
+          {/* Quick action buttons */}
+          <motion.div 
+            variants={itemVariants}
+            className="flex flex-wrap justify-center gap-4 mb-8"
+          >
+            <motion.button
+              onClick={copyEmail}
+              className="glass-morphism px-6 py-3 rounded-full text-cyan-400 hover:text-white transition-all duration-300 flex items-center space-x-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {copiedEmail ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span>{copiedEmail ? 'Copied!' : 'Copy Email'}</span>
+            </motion.button>
+            <motion.button
+              className="glass-morphism px-6 py-3 rounded-full text-green-400 hover:text-white transition-all duration-300 flex items-center space-x-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Calendar className="w-4 h-4" />
+              <span>Schedule Call</span>
+            </motion.button>
+            <motion.button
+              className="glass-morphism px-6 py-3 rounded-full text-purple-400 hover:text-white transition-all duration-300 flex items-center space-x-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Download Brochure</span>
+            </motion.button>
+          </motion.div>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-16 mb-16">
+          {/* Enhanced Contact Form */}
+          <motion.div
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            variants={containerVariants}
+          >
+            <FloatingElement delay={0.2}>
+              <motion.div variants={itemVariants}>
+                <GlowCard className="p-8">
+                  <div className="flex items-center space-x-3 mb-8">
+                    <motion.div
+                      className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                    >
+                      <Send className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <h3 className="text-xl font-bold text-white">Send Us a Message</h3>
+                  </div>
+
+                  {/* Service Selection */}
+                  <div className="mb-8">
+                    <label className="block text-sm font-semibold text-gray-300 mb-4">
+                      What can we help you with?
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {serviceOptions.map((service) => (
+                        <motion.button
+                          key={service.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedService(service.id);
+                            setFormData(prev => ({ ...prev, service: service.title }));
+                          }}
+                          className={`p-4 rounded-xl border transition-all duration-300 text-left ${
+                            selectedService === service.id
+                              ? 'border-cyan-400 bg-cyan-400/10'
+                              : 'border-gray-600 hover:border-gray-500'
+                          }`}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className="flex items-center space-x-3 mb-2">
+                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${service.color} flex items-center justify-center`}>
+                              <service.icon className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="font-semibold text-white text-sm">{service.title}</span>
+                          </div>
+                          <p className="text-xs text-gray-400">{service.description}</p>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Basic Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="name" className="block text-sm font-semibold text-gray-300 mb-2">
+                          Full Name *
+                        </label>
+                        <motion.input
+                          type="text"
+                          id="name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 glass-morphism rounded-xl text-white placeholder-gray-400 border border-gray-600 focus:border-cyan-400 focus:outline-none transition-all duration-300"
+                          placeholder="Your full name"
+                          whileFocus={{ scale: 1.02 }}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="email" className="block text-sm font-semibold text-gray-300 mb-2">
+                          Email Address *
+                        </label>
+                        <motion.input
+                          type="email"
+                          id="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 glass-morphism rounded-xl text-white placeholder-gray-400 border border-gray-600 focus:border-cyan-400 focus:outline-none transition-all duration-300"
+                          placeholder="your@email.com"
+                          whileFocus={{ scale: 1.02 }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="company" className="block text-sm font-semibold text-gray-300 mb-2">
+                          Company/Organization
+                        </label>
+                        <motion.input
+                          type="text"
+                          id="company"
+                          name="company"
+                          value={formData.company}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 glass-morphism rounded-xl text-white placeholder-gray-400 border border-gray-600 focus:border-cyan-400 focus:outline-none transition-all duration-300"
+                          placeholder="Your company name"
+                          whileFocus={{ scale: 1.02 }}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="subject" className="block text-sm font-semibold text-gray-300 mb-2">
+                          Subject *
+                        </label>
+                        <motion.input
+                          type="text"
+                          id="subject"
+                          name="subject"
+                          value={formData.subject}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 glass-morphism rounded-xl text-white placeholder-gray-400 border border-gray-600 focus:border-cyan-400 focus:outline-none transition-all duration-300"
+                          placeholder="Brief subject line"
+                          whileFocus={{ scale: 1.02 }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Advanced Fields Toggle */}
+                    <motion.button
+                      type="button"
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                      className="flex items-center space-x-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+                      whileHover={{ x: 5 }}
+                    >
+                      <span className="text-sm font-medium">
+                        {showAdvanced ? 'Hide' : 'Show'} Advanced Options
+                      </span>
+                      <motion.div
+                        animate={{ rotate: showAdvanced ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </motion.div>
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {showAdvanced && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="space-y-6"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <label htmlFor="budget" className="block text-sm font-semibold text-gray-300 mb-2">
+                                Budget Range
+                              </label>
+                              <select
+                                id="budget"
+                                name="budget"
+                                value={formData.budget}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 glass-morphism rounded-xl text-white border border-gray-600 focus:border-cyan-400 focus:outline-none transition-all duration-300"
+                              >
+                                <option value="">Select budget range</option>
+                                <option value="under-50k">Under $50K</option>
+                                <option value="50k-100k">$50K - $100K</option>
+                                <option value="100k-500k">$100K - $500K</option>
+                                <option value="500k-1m">$500K - $1M</option>
+                                <option value="over-1m">Over $1M</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label htmlFor="timeline" className="block text-sm font-semibold text-gray-300 mb-2">
+                                Project Timeline
+                              </label>
+                              <select
+                                id="timeline"
+                                name="timeline"
+                                value={formData.timeline}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 glass-morphism rounded-xl text-white border border-gray-600 focus:border-cyan-400 focus:outline-none transition-all duration-300"
+                              >
+                                <option value="">Select timeline</option>
+                                <option value="immediate">Immediate (1-2 weeks)</option>
+                                <option value="short">Short-term (1-3 months)</option>
+                                <option value="medium">Medium-term (3-6 months)</option>
+                                <option value="long">Long-term (6+ months)</option>
+                              </select>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div>
+                      <label htmlFor="message" className="block text-sm font-semibold text-gray-300 mb-2">
+                        Message *
+                      </label>
+                      <motion.textarea
+                        id="message"
+                        name="message"
+                        value={formData.message}
+                        onChange={handleInputChange}
+                        required
+                        rows={6}
+                        className="w-full px-4 py-3 glass-morphism rounded-xl text-white placeholder-gray-400 border border-gray-600 focus:border-cyan-400 focus:outline-none transition-all duration-300 resize-none"
+                        placeholder="Tell us about your project, goals, or questions..."
+                        whileFocus={{ scale: 1.01 }}
+                      />
+                    </div>
+
+                    {/* Submit Button */}
+                    <motion.button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold text-base rounded-xl shadow-glow hover:shadow-glow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span className="flex items-center justify-center space-x-3 relative z-10">
+                        {isSubmitting ? (
+                          <>
+                            <motion.div
+                              className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            />
+                            <span>Sending Message...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            <span>Send Message</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                          </>
+                        )}
+                      </span>
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500"
+                        initial={{ x: "-100%" }}
+                        whileHover={{ x: "0%" }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </motion.button>
+
+                    {/* Success/Error Messages */}
+                    <AnimatePresence>
+                      {isSubmitted && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex items-center space-x-3 p-4 bg-green-500/20 border border-green-500/30 rounded-xl"
+                        >
+                          <CheckCircle className="w-5 h-5 text-green-400" />
+                          <span className="text-green-300 font-medium">
+                            Message sent successfully! We'll get back to you within 24 hours.
+                          </span>
+                        </motion.div>
+                      )}
+                      
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex items-center space-x-3 p-4 bg-red-500/20 border border-red-500/30 rounded-xl"
+                        >
+                          <AlertCircle className="w-5 h-5 text-red-400" />
+                          <span className="text-red-300 font-medium">{error}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </form>
+                </GlowCard>
+              </motion.div>
+            </FloatingElement>
           </motion.div>
 
-          {/* Contact Information */}
-          <motion.div variants={itemVariants} className="space-y-8">
-            {/* Map */}
-            <div className="bg-white rounded-2xl overflow-hidden shadow-lg h-64 relative">
-              <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387193.315540303!2d-74.25987584570312!3d40.69767006766623!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sin!4v1645468227400!5m2!1sen!2sin" 
-                width="100%" 
-                height="100%" 
-                style={{ border: 0 }} 
-                allowFullScreen={false} 
-                loading="lazy"
-                className="grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
-              />
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-md">
-                <h3 className="font-medium text-gray-900">Headquarters</h3>
-                <p className="text-sm text-gray-600">123 Ocean Drive, Marine City</p>
-              </div>
-            </div>
-
-            {/* Contact Details */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-800 mb-6">Contact Information</h3>
-              
-              <div className="space-y-5">
-                <motion.div 
-                  className="flex items-start space-x-4"
-                  whileHover={{ x: 5 }}
-                >
-                  <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
-                    <Mail className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Email</h4>
-                    <a href="mailto:contact@bluetechrevolution.com" className="text-blue-600 hover:underline">contact@bluetechrevolution.com</a>
-                    <p className="text-sm text-gray-500 mt-1">We'll respond within 24 hours</p>
-                  </div>
-                </motion.div>
-                
-                <motion.div 
-                  className="flex items-start space-x-4"
-                  whileHover={{ x: 5 }}
-                >
-                  <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
-                    <Phone className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Phone</h4>
-                    <a href="tel:+15551234567" className="text-blue-600 hover:underline">+1 (555) 123-4567</a>
-                    <p className="text-sm text-gray-500 mt-1">Mon-Fri from 9am to 5pm EST</p>
-                  </div>
-                </motion.div>
-                
-                <motion.div 
-                  className="flex items-start space-x-4"
-                  whileHover={{ x: 5 }}
-                >
-                  <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
-                    <MapPin className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Location</h4>
-                    <p className="text-gray-700">123 Ocean Drive, Marine City, MC 12345</p>
-                    <a href="https://goo.gl/maps/yourlink" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm flex items-center gap-1 mt-1">
-                      Get directions
-                      <ArrowRight className="h-3 w-3" />
-                    </a>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-
-            {/* Social Media & Newsletter */}
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-white shadow-xl">
-              <h3 className="text-xl font-bold mb-6">Connect With Us</h3>
-              
-              <div className="flex space-x-4 mb-8">
-                {[Facebook, Twitter, Instagram, Linkedin].map((Icon, index) => (
-                  <motion.a
-                    key={index}
-                    href="#"
-                    whileHover={{ y: -4, scale: 1.15 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-colors"
-                  >
-                    <Icon className="h-5 w-5" />
-                  </motion.a>
-                ))}
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-lg mb-3">Subscribe to Our Newsletter</h4>
-                <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      className="w-full px-4 py-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 focus:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-blue-100"
-                      required
-                      disabled={isNewsletterSubmitting || isNewsletterSubmitted}
-                    />
-                    {isNewsletterSubmitted && (
-                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                        <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+          {/* Enhanced Contact Information */}
+          <motion.div
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            variants={containerVariants}
+            className="space-y-8"
+          >
+            {/* Contact Cards */}
+            <div className="space-y-6">
+              {contactInfo.map((info, index) => (
+                <FloatingElement key={info.title} delay={0.3 + index * 0.1}>
+                  <motion.div variants={itemVariants}>
+                    <GlowCard className="p-6 group cursor-pointer">
+                      <div className="flex items-start space-x-4">
+                        <motion.div
+                          className={`w-14 h-14 rounded-2xl bg-gradient-to-r ${info.gradient} flex items-center justify-center flex-shrink-0`}
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                        >
+                          <info.icon className="w-7 h-7 text-white" />
+                        </motion.div>
+                        
+                        <div className="flex-1">
+                          <h4 className="text-lg font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors">
+                            {info.title}
+                          </h4>
+                          <div className="space-y-2 mb-4">
+                            {info.details.map((detail, i) => (
+                              <p key={i} className="text-gray-300 group-hover:text-gray-200 transition-colors">
+                                {detail}
+                              </p>
+                            ))}
+                          </div>
+                          {info.action && (
+                            <motion.button
+                              className="text-sm font-semibold text-cyan-400 hover:text-cyan-300 flex items-center space-x-2 group-hover:translate-x-1 transition-all duration-300"
+                              whileHover={{ x: 5 }}
+                            >
+                              <span>{info.action}</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </motion.button>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <motion.button
-                    type="submit"
-                    disabled={isNewsletterSubmitting || isNewsletterSubmitted}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-3 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium disabled:opacity-70 flex items-center"
-                  >
-                    {isNewsletterSubmitting ? (
-                      <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    ) : (
-                      <Send className="h-5 w-5" />
-                    )}
-                  </motion.button>
-                </form>
-                
-                {isNewsletterSubmitted && (
-                  <motion.p 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-blue-100 mt-2"
-                  >
-                    Thank you for subscribing! Check your inbox for confirmation.
-                  </motion.p>
-                )}
-              </div>
+                    </GlowCard>
+                  </motion.div>
+                </FloatingElement>
+              ))}
             </div>
+
+
           </motion.div>
         </div>
 
-        {/* Support Options */}
-        <motion.div variants={itemVariants} className="mb-16">
-          <h3 className="text-2xl font-bold text-center mb-8">Support Our Cause</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                type: 'Monthly',
-                icon: '🔄',
-                description: 'Ongoing support with monthly donations'
-              }, 
-              {
-                type: 'One-time', 
-                icon: '🎁',
-                description: 'Single contribution to our initiatives'
-              }, 
-              {
-                type: 'Corporate', 
-                icon: '🏢',
-                description: 'Partnership opportunities for businesses'
-              }
-            ].map((type, index) => (
-              <motion.div
-                key={type.type}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ 
-                  y: -10, 
-                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
-                }}
-                className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
-              >
-                <div className="text-4xl mb-4">{type.icon}</div>
-                <h4 className="text-xl font-semibold mb-3">{type.type} Donation</h4>
-                <p className="text-gray-600 mb-4">{type.description}</p>
-                <motion.button 
-                  whileHover={{ x: 5 }}
-                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors font-medium"
-                >
-                  Learn More <ArrowRight className="h-4 w-4 ml-2" />
-                </motion.button>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Programs Grid */}
+        {/* Enhanced CTA Section */}
         <motion.div
-          variants={itemVariants}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={containerVariants}
+          className="text-center"
         >
-          {[
-            {
-              title: "Volunteer Programs",
-              description: "Join our beach cleanup events and marine conservation programs.",
-              icon: "🌊",
-              color: "from-blue-500 to-cyan-500"
-            },
-            {
-              title: "Education Initiatives",
-              description: "Participate in workshops and awareness programs about ocean conservation.",
-              icon: "🎓",
-              color: "from-green-500 to-teal-500"
-            },
-            {
-              title: "Partner With Us",
-              description: "Collaborate with us on environmental projects and initiatives.",
-              icon: "🤝",
-              color: "from-purple-500 to-indigo-500"
-            }
-          ].map((program, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ y: -5 }}
-              className="bg-white p-6 rounded-lg shadow-lg relative overflow-hidden"
+          <FloatingElement delay={1}>
+            <motion.div 
+              variants={itemVariants}
+              className="glass-morphism rounded-3xl p-12 max-w-4xl mx-auto relative overflow-hidden"
             >
-              <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${program.color} opacity-10 rounded-full transform translate-x-5 -translate-y-5`}></div>
-              <div className="text-3xl mb-3">{program.icon}</div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">{program.title}</h3>
-              <p className="text-gray-600">{program.description}</p>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <a href="#" className="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                  Get Involved <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
+              {/* Background decoration */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-cyan-400/10 to-green-500/10" />
+              
+              <motion.div
+                className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center relative"
+                animate={{ 
+                  rotate: 360,
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ 
+                  rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                  scale: { duration: 4, repeat: Infinity }
+                }}
+              >
+                <Sparkles className="w-10 h-10 text-white" />
+                <div className="absolute inset-0 rounded-full border-4 border-cyan-400/30 animate-ping" />
+              </motion.div>
+              
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                Ready to Start Your Sustainability Journey?
+              </h3>
+              <p className="text-base text-gray-300 mb-8 max-w-2xl mx-auto">
+                Join thousands of organizations already making a difference. 
+                Let's create something extraordinary together.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <motion.button
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-semibold rounded-full shadow-glow hover:shadow-glow-lg transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Schedule Free Consultation
+                </motion.button>
+                
+                <motion.button
+                  className="px-8 py-4 glass-morphism rounded-full text-white font-semibold border border-white/20 hover:border-white/40 transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Download Impact Report
+                </motion.button>
               </div>
             </motion.div>
-          ))}
-        </motion.div>
-
-        {/* FAQ Section */}
-        <motion.div
-          variants={itemVariants}
-          className="mt-20 bg-white rounded-2xl p-8 shadow-xl"
-        >
-          <h3 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h3>
-          
-          <div className="grid gap-6 md:grid-cols-2">
-            {[
-              {
-                question: "How can I get involved?",
-                answer: "You can volunteer for our cleanup events, donate to support our initiatives, or spread awareness about ocean conservation in your community."
-              },
-              {
-                question: "Where do my donations go?",
-                answer: "Your contributions directly fund our ocean cleanup operations, research initiatives, and educational programs aimed at marine conservation."
-              },
-              {
-                question: "Do you offer corporate partnerships?",
-                answer: "Yes, we collaborate with businesses committed to sustainability. Contact us to discuss how we can work together."
-              },
-              {
-                question: "How do I join a beach cleanup?",
-                answer: "Check our Events page for upcoming cleanups in your area, or contact us to organize one in your community."
-              }
-            ].map((faq, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-blue-50 p-6 rounded-xl"
-              >
-                <h4 className="text-lg font-semibold mb-3 text-gray-900">{faq.question}</h4>
-                <p className="text-gray-700">{faq.answer}</p>
-              </motion.div>
-            ))}
-          </div>
+          </FloatingElement>
         </motion.div>
       </div>
-    </motion.section>
+    </section>
   );
 }
