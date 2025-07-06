@@ -5,6 +5,8 @@ Welcome to the **BlueTech Revolution** repository! This project has been complet
 ## 🔗 Link to the Website
 [BlueTech Revolution](https://blue-tech-revolution.vercel.app/)
 
+> **Note**: For the best visual experience, we recommend viewing the website in Dark Mode for optimal visibility and design aesthetics.
+
 ## ✨ Features
 - 🎨 **Complete Modern Redesign**: Built with React, TypeScript, Tailwind CSS, and Framer Motion
 - 🌊 **Interactive Animations**: Floating elements, particle effects, bubble animations, and wave backgrounds
