@@ -3,7 +3,7 @@
 Welcome to the **BlueTech Revolution** repository! This project has been completely redesigned from the ground up with modern UI/UX principles, featuring stunning visuals, interactive animations, and cutting-edge environmental technology showcases.
 
 ## 🔗 Link to the Website
-[BlueTech Revolution](https://blue-tech-revolution-three.vercel.app/)
+[BlueTech Revolution](https://blue-tech-revolution.vercel.app/)
 
 ## ✨ Features
 - 🎨 **Complete Modern Redesign**: Built with React, TypeScript, Tailwind CSS, and Framer Motion
